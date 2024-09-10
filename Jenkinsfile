@@ -113,7 +113,7 @@ pipeline {
                                 terraform workspace select -or-create=true ${envName}
                                 terraform apply -auto-approve \
                                 -var 'app_name=${envName}' \
-                                -var 'namespace=${envName}' \
+                                -var 'namespace_name=${envName}' \
                                 -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
                                 -var 'public_port=${env.PUBLIC_PORT}'
                                 """
