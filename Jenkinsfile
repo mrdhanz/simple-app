@@ -106,8 +106,9 @@ pipeline {
 
                     envFiles.each { envFile ->
                         def envName = envFile.name.replace('.env.', '')
+                        loadVarsFromFile(envFile.path)
                         echo "Applying Terraform for environment: ${envName}"
-                        withEnv(["ENV_FILE=${envFile.path}"]) {
+                        withEnv(["ENV_FILE=${envFile.path}", ]) {
                             withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                 sh """
                                 terraform workspace select -or-create=true ${envName}
@@ -154,5 +155,15 @@ pipeline {
                 }
             }
         }
+    }
+}
+
+private void loadVarsFromFile(String path) {
+    def file = readFile(path)
+        .replaceAll('(?m)^\\s*\\r?\\n', '')  // skip empty line
+        .replaceAll('(?m)^#[^\\n]*\\r?\\n', '')  // skip commented lines
+    file.split('\n').each { envLine ->
+        def (key, value) = envLine.tokenize('=')
+        env."${key}" = "${value.trim().replaceAll('^\"|\"$', '')}"
     }
 }
