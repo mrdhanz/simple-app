@@ -70,6 +70,8 @@ pipeline {
                     def envFiles = findFiles(glob: 'environment/.env.*')
                     def parallelSteps = [:]
 
+                    sh 'terraform init'
+
                     envFiles.each { envFile ->
                         def envName = envFile.name.replace('.env.', '')
 
@@ -79,7 +81,6 @@ pipeline {
                                 loadVarsFromFile(envFile.path)
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
-                                        terraform init
                                         terraform workspace select -or-create=true ${envName}
                                         terraform apply -auto-approve \
                                         -var 'app_name=${envName}' \
