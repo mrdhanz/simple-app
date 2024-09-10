@@ -52,8 +52,8 @@ pipeline {
                         withEnv(["ENV_FILE=${envFile.path}"]) {
                             echo "Running build for ${envName} using ${envFile.path}"
                             sh 'npm run build'
-                            sh "docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} -f Dockerfile ."
-                            sh "docker tag ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ${DOCKER_IMAGE}-${envName}:latest"
+                            sh "sudo docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} -f Dockerfile ."
+                            sh "sudo docker tag ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ${DOCKER_IMAGE}-${envName}:latest"
                         }
                     }
                 }
@@ -79,8 +79,8 @@ pipeline {
                         sh 'rm -rf .env'
                         sh "cp ${envFile.path} .env"
                         withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                            sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
-                            sh "docker push ${DOCKER_IMAGE}-${envName}:latest"
+                            sh 'sudo docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
+                            sh "sudo docker push ${DOCKER_IMAGE}-${envName}:latest"
                         }
                     }
                 }
