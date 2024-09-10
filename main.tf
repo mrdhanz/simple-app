@@ -62,7 +62,7 @@ resource "kubernetes_deployment" "simple_app" {
 
 resource "kubernetes_service" "simple_app" {
   metadata {
-    name      = var.app_name + "-service"
+    name      = "${var.app_name}-service"
     namespace = kubernetes_namespace.simple_app.metadata[0].name
   }
 
