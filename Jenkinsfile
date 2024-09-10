@@ -79,8 +79,10 @@ pipeline {
                         sh 'rm -rf .env'
                         sh "cp ${envFile.path} .env"
                         withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                            sh "echo ${DOCKER_PASSWORD} | sudo docker login -u ${DOCKER_USERNAME} --password-stdin"
-                            sh "sudo docker push ${DOCKER_IMAGE}-${envName}:latest"
+                            sh """
+                            echo ${DOCKER_PASSWORD} | sudo docker login -u ${DOCKER_USERNAME} --password-stdin
+                            sudo docker push ${DOCKER_IMAGE}-${envName}:latest
+                            """
                         }
                     }
                 }
