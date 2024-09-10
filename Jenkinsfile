@@ -68,7 +68,6 @@ pipeline {
             steps {
                 script {
                     def envFiles = findFiles(glob: 'environment/.env.*')
-                    sh 'terraform init'
                     def parallelSteps = [:]
 
                     envFiles.each { envFile ->
@@ -80,12 +79,14 @@ pipeline {
                                 loadVarsFromFile(envFile.path)
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
+                                        terraform init
                                         terraform workspace select -or-create=true ${envName}
                                         terraform apply -auto-approve \
                                         -var 'app_name=${envName}' \
                                         -var 'namespace_name=${envName}' \
                                         -var 'public_port=${env.PUBLIC_PORT}' \
-                                        -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest'
+                                        -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
+                                        -lock=false
                                     """
                                 }
                             }
