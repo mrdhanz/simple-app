@@ -14,7 +14,11 @@ pipeline {
         nodejs 'nodejs-22'
         terraform 'terraform'
     }
-
+    
+    triggers {
+        githubPush()  // This triggers the pipeline when a push is detected
+    }
+    
     stages {
         stage('Checkout') {
             steps {
