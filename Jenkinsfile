@@ -67,34 +67,25 @@ pipeline {
             steps {
                 script {
                     def envFiles = findFiles(glob: 'environment/.env.*')
-                    def parallelSteps = [:]
 
                     sh 'terraform init'
 
                     envFiles.each { envFile ->
                         def envName = envFile.name.replace('.env.', '')
-
-                        parallelSteps[envName] = {
-                            stage("Deploying to Kubernetes for ${envName}") {
-                                echo "Deploying to Kubernetes for environment: ${envName}"
-                                loadVarsFromFile(envFile.path, envName)
-                                def publicPort = env."${envName}_PUBLIC_PORT"
-                                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                                    sh """
-                                        terraform workspace select -or-create=true ${envName}
-                                        terraform apply -auto-approve \
-                                        -var 'app_name=${envName}' \
-                                        -var 'namespace_name=${envName}' \
-                                        -var 'public_port=${publicPort}' \
-                                        -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
-                                        -lock=false -lock-timeout=30s -destroy
-                                    """
-                                }
-                            }
+                        echo "Deploying to Kubernetes for environment: ${envName}"
+                        loadVarsFromFile(envFile.path, envName)
+                        def publicPort = env."${envName}_PUBLIC_PORT"
+                        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                            sh """
+                                terraform workspace select -or-create=true ${envName}
+                                terraform apply -auto-approve \
+                                -var 'app_name=${envName}' \
+                                -var 'namespace_name=${envName}' \
+                                -var 'public_port=${publicPort}' \
+                                -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest'
+                            """
                         }
                     }
-
-                    parallel parallelSteps  // Run all deployments in parallel
                 }
             }
         }
@@ -104,25 +95,18 @@ pipeline {
             steps {
                 script {
                     def envFiles = findFiles(glob: 'environment/.env.*')
-                    def parallelSteps = [:]
 
                     envFiles.each { envFile ->
                         def envName = envFile.name.replace('.env.', '')
-
-                        parallelSteps[envName] = {
-                            stage("Destroying for ${envName}") {
-                                echo "Destroying infrastructure for environment: ${envName}"
-                                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                                    sh """
-                                        terraform workspace select -or-create=true ${envName}
-                                        terraform destroy -auto-approve -lock=false -lock-timeout=30s
-                                    """
-                                }
-                            }
+                        
+                        echo "Destroying infrastructure for environment: ${envName}"
+                        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                            sh """
+                                terraform workspace select -or-create=true ${envName}
+                                terraform destroy -auto-approve
+                            """
                         }
                     }
-
-                    parallel parallelSteps  // Run all destroys in parallel
                 }
             }
         }
