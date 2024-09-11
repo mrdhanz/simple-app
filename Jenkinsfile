@@ -114,7 +114,7 @@ pipeline {
                                 echo "Destroying infrastructure for environment: ${envName}"
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
-                                        terraform workspace select ${envName}
+                                        terraform workspace select -or-create=true ${envName}
                                         terraform destroy -auto-approve
                                         terraform workspace select default
                                         terraform workspace delete ${envName}
