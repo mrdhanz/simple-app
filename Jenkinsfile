@@ -117,7 +117,7 @@ pipeline {
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
                                         terraform workspace select -or-create=true ${envName}
-                                        terraform destroy -auto-approve -lock=false "${envName}-plan.tfplan"
+                                        terraform apply -destroy -auto-approve -lock=false "${envName}-plan.tfplan"
                                     """
                                 }
                             }
