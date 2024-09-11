@@ -103,7 +103,11 @@ pipeline {
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                             sh """
                                 terraform workspace select -or-create=true ${envName}
-                                terraform destroy -auto-approve
+                                terraform destroy -auto-approve \
+                                -var 'app_name=${envName}' \
+                                -var 'namespace_name=${envName}' \
+                                -var 'public_port=${publicPort}' \
+                                -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest'
                             """
                         }
                     }
