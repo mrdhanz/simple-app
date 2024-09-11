@@ -77,7 +77,6 @@ pipeline {
                         def publicPort = env."${envName}_PUBLIC_PORT"
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                             sh """
-                                terraform workspace select -or-create=true ${envName}
                                 terraform apply -auto-approve \
                                 -var 'app_name=${envName}' \
                                 -var 'namespace_name=${envName}' \
@@ -104,7 +103,6 @@ pipeline {
                         def publicPort = env."${envName}_PUBLIC_PORT"
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                             sh """
-                                terraform workspace select -or-create=true ${envName}
                                 terraform destroy -auto-approve \
                                 -var 'app_name=${envName}' \
                                 -var 'namespace_name=${envName}' \
