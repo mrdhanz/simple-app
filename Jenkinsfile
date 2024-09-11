@@ -47,35 +47,35 @@ pipeline {
                             stage("Building and pushing for ${envName}") {
                                 echo "Building and pushing Docker image for environment: ${envName}"
 
-                                // Create a unique build directory for each environment
-                                sh "rm -rf build-${envName} && mkdir build-${envName}"
+                                // Load environment variables from the .env file using withEnv
+                                def envVars = readFile(envFile.path)
+                                        .replaceAll('(?m)^\\s*\\r?\\n', '')
+                                        .replaceAll('(?m)^#[^\\n]*\\r?\\n', '')
+                                        .split('\n').collect { line ->
+                                                        return line.trim() && !line.startsWith('#') ? line : null
+                                }.findAll { it != null }
 
-                                // Copy the environment-specific .env file to the build directory
-                                sh "cp ${envFile} build-${envName}/.env"
+                                withEnv(envVars) {
+                                    sh 'GENERATE_SOURCEMAP=false npm run build'
 
-                                // Use environment-specific build directory
-                                sh "GENERATE_SOURCEMAP=false REACT_APP_CLIENT_ID=${envName} npm run build --prefix build-${envName}"
+                                    // Docker build using the current directory context
+                                    sh "docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ."
 
-                                // Docker build using unique build context for each environment
-                                sh "docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} build-${envName}/"
-
-                                // Docker login and push the image
-                                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                                    sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
-                                    sh "docker push ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID}"
+                                    // Docker login and push the image
+                                    withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                                        sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
+                                        sh "docker push ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID}"
+                                    }
                                 }
-
-                                // Clean up the build directory after pushing
-                                sh "rm -rf build-${envName}"
+                                        }
                             }
                         }
-                    }
 
                     // Run all environment builds in parallel
                     parallel parallelSteps
+                    }
                 }
             }
-        }
 
         stage('Deploy to Kubernetes') {
             when { not { equals expected: true, actual: params.DESTROY } }
@@ -133,8 +133,8 @@ pipeline {
                 }
             }
         }
+        }
     }
-}
 
 private void loadVarsFromFile(String path, String envName) {
     def file = readFile(path)
