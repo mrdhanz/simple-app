@@ -89,7 +89,7 @@ pipeline {
                                         -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
                                         -out=${envName}-plan.tfplan \
                                         -lock=false
-                                        terraform apply ${envName}-plan.tfplan -auto-approve -lock=false
+                                        terraform apply "${envName}-plan.tfplan"
                                     """
                                 }
                             }
@@ -118,7 +118,7 @@ pipeline {
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
                                         terraform workspace select -or-create=true ${envName}
-                                        terraform destroy ${envName}-plan.tfplan -auto-approve -lock=false 
+                                        terraform destroy ${envName}-plan.tfplan
                                     """
                                 }
                             }
