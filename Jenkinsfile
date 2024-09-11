@@ -87,7 +87,7 @@ pipeline {
                                         -var 'namespace_name=${envName}' \
                                         -var 'public_port=${env.PUBLIC_PORT}' \
                                         -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
-                                        -out=\${envName}-plan.tfplan \
+                                        -out=${envName}-plan.tfplan \
                                         -lock=false
                                         terraform apply -auto-approve -lock=false ${envName}-plan.tfplan
                                     """
