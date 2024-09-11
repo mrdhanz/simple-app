@@ -49,10 +49,9 @@ pipeline {
                                 sh "rm -rf build"
                                 sh "GENERATE_SOURCEMAP=false REACT_APP_CLIENT_ID=${envName} npm run build"
                                 sh "docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ."
-                                sh "docker tag ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ${DOCKER_IMAGE}-${envName}:latest"
                                 withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                                     sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
-                                    sh "docker push ${DOCKER_IMAGE}-${envName}:latest"
+                                    sh "docker push ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID}"
                                 }
                             }
                         }
@@ -83,7 +82,7 @@ pipeline {
                                 -var 'app_name=${envName}' \
                                 -var 'namespace_name=${envName}' \
                                 -var 'public_port=${publicPort}' \
-                                -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest'
+                                -var 'docker_image=${DOCKER_IMAGE}-${envName}:${env.BUILD_ID}'
                             """
                         }
                     }
