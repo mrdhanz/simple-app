@@ -100,6 +100,8 @@ pipeline {
                         def envName = envFile.name.replace('.env.', '')
                         
                         echo "Destroying infrastructure for environment: ${envName}"
+                        loadVarsFromFile(envFile.path, envName)
+                        def publicPort = env."${envName}_PUBLIC_PORT"
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                             sh """
                                 terraform workspace select -or-create=true ${envName}
