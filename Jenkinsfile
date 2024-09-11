@@ -56,10 +56,10 @@ pipeline {
                                 }.findAll { it != null }
 
                                 withEnv(envVars) {
-                                    sh 'GENERATE_SOURCEMAP=false npm run build'
+                                    sh "GENERATE_SOURCEMAP=false BUILD_PATH=./${envName}-build npm run build"
 
                                     // Docker build using the current directory context
-                                    sh "docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ."
+                                    sh "docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} -f Dockerfile ./${envName}-build"
 
                                     // Docker login and push the image
                                     withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
@@ -67,15 +67,15 @@ pipeline {
                                         sh "docker push ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID}"
                                     }
                                 }
-                                        }
                             }
                         }
+                    }
 
                     // Run all environment builds in parallel
                     parallel parallelSteps
-                    }
                 }
             }
+        }
 
         stage('Deploy to Kubernetes') {
             when { not { equals expected: true, actual: params.DESTROY } }

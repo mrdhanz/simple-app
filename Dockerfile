@@ -2,7 +2,7 @@
 FROM nginx:alpine
 
 # Copy the build files from the local machine into the container
-COPY build/ /usr/share/nginx/html
+COPY . /usr/share/nginx/html
 
 # Expose port 80 to the outside world
 EXPOSE 80
