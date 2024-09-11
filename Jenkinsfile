@@ -87,7 +87,7 @@ pipeline {
                                         -var 'namespace_name=${envName}' \
                                         -var 'public_port=${publicPort}' \
                                         -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
-                                        -lock=false
+                                        -lock=false -lock-timeout=30s
                                     """
                                 }
                             }
@@ -115,7 +115,7 @@ pipeline {
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
                                         terraform workspace select -or-create=true ${envName}
-                                        terraform destroy -auto-approve -lock=false
+                                        terraform destroy -auto-approve -lock=false -lock-timeout=30s
                                     """
                                 }
                             }
