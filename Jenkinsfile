@@ -46,8 +46,7 @@ pipeline {
                         parallelSteps[envName] = {
                             stage("Building and pushing for ${envName}") {
                                 echo "Building and pushing Docker image for environment: ${envName}"
-                                sh "cp ${envFile.path} .env"
-                                sh 'npm run build'
+                                sh "GENERATE_SOURCEMAP=false REACT_APP_CLIENT_ID=${envName} npm run build"
                                 sh "docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ."
                                 sh "docker tag ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ${DOCKER_IMAGE}-${envName}:latest"
                                 withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
