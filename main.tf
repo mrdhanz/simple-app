@@ -15,6 +15,10 @@ variable "public_port" {
   type        = number
 }
 
+variable "build_number" {
+  type        = string
+}
+
 provider "kubernetes" {
   config_path = "~/.kube/config"
 }
@@ -43,6 +47,7 @@ resource "kubernetes_deployment" "simple_app" {
       metadata {
         labels = {
           app = var.app_name
+          build_number = var.build_number
         }
       }
 

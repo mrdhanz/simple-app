@@ -77,11 +77,13 @@ pipeline {
                         def publicPort = env."${envName}_PUBLIC_PORT"
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                             sh """
+                                terraform workspace select -or-create=true ${envName}
                                 terraform apply -auto-approve \
                                 -var 'app_name=${envName}' \
                                 -var 'namespace_name=${envName}' \
                                 -var 'public_port=${publicPort}' \
-                                -var 'docker_image=${DOCKER_IMAGE}-${envName}:${env.BUILD_ID}'
+                                -var 'docker_image=${DOCKER_IMAGE}-${envName}:${env.BUILD_ID}' \
+                                -var 'build_number=${env.BUILD_ID}'
                             """
                         }
                     }
@@ -103,11 +105,13 @@ pipeline {
                         def publicPort = env."${envName}_PUBLIC_PORT"
                         withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                             sh """
+                                terraform workspace select -or-create=true ${envName}
                                 terraform destroy -auto-approve \
                                 -var 'app_name=${envName}' \
                                 -var 'namespace_name=${envName}' \
                                 -var 'public_port=${publicPort}' \
-                                -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest'
+                                -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
+                                -var 'build_number=${env.BUILD_ID}'
                             """
                         }
                     }
