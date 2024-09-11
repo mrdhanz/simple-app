@@ -46,18 +46,33 @@ pipeline {
                         parallelSteps[envName] = {
                             stage("Building and pushing for ${envName}") {
                                 echo "Building and pushing Docker image for environment: ${envName}"
-                                sh "rm -rf build"
-                                sh "GENERATE_SOURCEMAP=false REACT_APP_CLIENT_ID=${envName} npm run build"
-                                sh "docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ."
+
+                                // Create a unique build directory for each environment
+                                sh "rm -rf build-${envName} && mkdir build-${envName}"
+
+                                // Copy the environment-specific .env file to the build directory
+                                sh "cp ${envFile} build-${envName}/.env"
+
+                                // Use environment-specific build directory
+                                sh "GENERATE_SOURCEMAP=false REACT_APP_CLIENT_ID=${envName} npm run build --prefix build-${envName}"
+
+                                // Docker build using unique build context for each environment
+                                sh "docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} build-${envName}/"
+
+                                // Docker login and push the image
                                 withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                                     sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
                                     sh "docker push ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID}"
                                 }
+
+                                // Clean up the build directory after pushing
+                                sh "rm -rf build-${envName}"
                             }
                         }
                     }
 
-                    parallel parallelSteps  // Run all environment builds in parallel
+                    // Run all environment builds in parallel
+                    parallel parallelSteps
                 }
             }
         }
@@ -99,7 +114,7 @@ pipeline {
 
                     envFiles.each { envFile ->
                         def envName = envFile.name.replace('.env.', '')
-                        
+
                         echo "Destroying infrastructure for environment: ${envName}"
                         loadVarsFromFile(envFile.path, envName)
                         def publicPort = env."${envName}_PUBLIC_PORT"
