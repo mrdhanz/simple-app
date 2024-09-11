@@ -47,7 +47,7 @@ pipeline {
                             stage("Building and pushing for ${envName}") {
                                 echo "Building and pushing Docker image for environment: ${envName}"
                                 sh "cp ${envFile.path} .env"
-                                sh "npm run build"
+                                sh 'npm run build'
                                 sh "docker build -t ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ."
                                 sh "docker tag ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID} ${DOCKER_IMAGE}-${envName}:latest"
                                 withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
@@ -86,8 +86,8 @@ pipeline {
                                         -var 'app_name=${envName}' \
                                         -var 'namespace_name=${envName}' \
                                         -var 'public_port=${env.PUBLIC_PORT}' \
-                                        -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \ \
-                                        -out=${envName}-plan.tfplan \
+                                        -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
+                                        -out=\${envName}-plan.tfplan \
                                         -lock=false
                                         terraform apply -auto-approve -lock=false ${envName}-plan.tfplan
                                     """
@@ -118,12 +118,7 @@ pipeline {
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
                                         terraform workspace select -or-create=true ${envName}
-                                        terraform destroy -auto-approve \
-                                        -var 'app_name=${envName}' \
-                                        -var 'namespace_name=${envName}' \
-                                        -var 'public_port=${env.PUBLIC_PORT}' \
-                                        -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
-                                        -lock=false
+                                        terraform destroy -auto-approve -lock=false ${envName}-plan.tfplan
                                     """
                                 }
                             }
@@ -136,7 +131,6 @@ pipeline {
         }
     }
 }
-
 
 private void loadVarsFromFile(String path) {
     def file = readFile(path)
