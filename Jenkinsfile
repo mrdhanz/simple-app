@@ -87,7 +87,7 @@ pipeline {
                                         -var 'namespace_name=${envName}' \
                                         -var 'public_port=${publicPort}' \
                                         -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
-                                        -lock=false -lock-timeout=30s
+                                        -lock=false -lock-timeout=30s -destroy
                                     """
                                 }
                             }
