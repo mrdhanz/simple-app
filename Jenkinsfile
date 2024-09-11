@@ -82,14 +82,12 @@ pipeline {
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
                                         terraform workspace select -or-create=true ${envName}
-                                        terraform plan \
+                                        terraform apply -auto-approve \
                                         -var 'app_name=${envName}' \
                                         -var 'namespace_name=${envName}' \
                                         -var 'public_port=${publicPort}' \
                                         -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
-                                        -out=${envName}-plan.tfplan \
                                         -lock=false
-                                        terraform apply -auto-approve -lock=false "${envName}-plan.tfplan"
                                     """
                                 }
                             }
@@ -117,7 +115,7 @@ pipeline {
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
                                         terraform workspace select -or-create=true ${envName}
-                                        terraform apply -destroy -auto-approve -lock=false "${envName}-plan.tfplan"
+                                        terraform destroy -auto-approve -lock=false
                                     """
                                 }
                             }
