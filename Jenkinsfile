@@ -78,18 +78,19 @@ pipeline {
                         parallelSteps[envName] = {
                             stage("Deploying to Kubernetes for ${envName}") {
                                 echo "Deploying to Kubernetes for environment: ${envName}"
-                                loadVarsFromFile(envFile.path)
+                                loadVarsFromFile(envFile.path, envName)
+                                def publicPort = env."${envName}_PUBLIC_PORT"
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
                                         terraform workspace select -or-create=true ${envName}
                                         terraform plan \
                                         -var 'app_name=${envName}' \
                                         -var 'namespace_name=${envName}' \
-                                        -var 'public_port=${env.PUBLIC_PORT}' \
+                                        -var 'public_port=${publicPort}' \
                                         -var 'docker_image=${DOCKER_IMAGE}-${envName}:latest' \
                                         -out=${envName}-plan.tfplan \
                                         -lock=false
-                                        terraform apply "${envName}-plan.tfplan"
+                                        terraform apply "${envName}-plan.tfplan" -lock=false
                                     """
                                 }
                             }
@@ -114,11 +115,10 @@ pipeline {
                         parallelSteps[envName] = {
                             stage("Destroying for ${envName}") {
                                 echo "Destroying infrastructure for environment: ${envName}"
-                                loadVarsFromFile(envFile.path)
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
                                         terraform workspace select -or-create=true ${envName}
-                                        terraform destroy ${envName}-plan.tfplan
+                                        terraform destroy ${envName}-plan.tfplan -lock=false
                                     """
                                 }
                             }
@@ -132,12 +132,12 @@ pipeline {
     }
 }
 
-private void loadVarsFromFile(String path) {
+private void loadVarsFromFile(String path, String envName) {
     def file = readFile(path)
         .replaceAll('(?m)^\\s*\\r?\\n', '')  // skip empty line
         .replaceAll('(?m)^#[^\\n]*\\r?\\n', '')  // skip commented lines
     file.split('\n').each { envLine ->
         def (key, value) = envLine.tokenize('=')
-        env."${key}" = "${value.trim().replaceAll('^\"|\"$', '')}"
+        env."${envName}_${key}" = "${value.trim().replaceAll('^\"|\"$', '')}"
     }
 }
