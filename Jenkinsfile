@@ -82,8 +82,7 @@ pipeline {
                                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                                     sh """
                                         terraform workspace select -or-create=true ${envName}
-                                        terraform plan
-                                        terraform apply -auto-approve \
+                                        terraform plan \
                                         -var 'app_name=${envName}' \
                                         -var 'namespace_name=${envName}' \
                                         -var 'public_port=${env.PUBLIC_PORT}' \
