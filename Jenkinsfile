@@ -65,6 +65,8 @@ pipeline {
                                     withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                                         sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
                                         sh "docker push ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID}"
+                                        // remove the image from the local machine after pushing it to the registry
+                                        sh "docker rmi ${DOCKER_IMAGE}-${envName}:${env.BUILD_ID}"
                                     }
                                 }
                             }
