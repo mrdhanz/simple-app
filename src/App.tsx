@@ -8,7 +8,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Client ID: {process.env.REACT_APP_CLIENT_ID}
+          Client ID: {process.env.REACT_APP_CLIENT_ID} v1.0.0
         </p>
         <a
           className="App-link"
